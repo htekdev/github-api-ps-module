@@ -39,68 +39,100 @@ Ensure these variables are set in your environment before running the module.
    Import-Module ./GitHubRestModule.psd1
    ```
 
-## Usage
-Below are some examples of how to use the cmdlets provided by this module:
+## Main Usage Scenarios
 
-### Get GitHub Repositories
+### How to Sign In
+To authenticate with the GitHub API, ensure your environment variables are properly set up (e.g., `GITHUB_TOKEN` for personal access token authentication). Then, call the `Update-GitHubToken` cmdlet:
+
 ```powershell
-Get-GitHubRepositories -OrganizationName "my-org"
+Update-GitHubToken
 ```
 
-### Invoke a GitHub API Route
+This will authenticate your session and allow you to interact with the GitHub API.
+
+### Invoke Simple GitHub API Endpoint
+Use the `Invoke-GitHubApiRoute` cmdlet to perform simple API actions. For example:
+
 ```powershell
+# Get repository details
 Invoke-GitHubApiRoute -Method GET -Route "/repos/my-org/my-repo"
+
+# Create a new issue
+Invoke-GitHubApiRoute -Method POST -Route "/repos/my-org/my-repo/issues" -Body @{ title = "New Issue"; body = "Issue description" }
 ```
 
-### Generate a GitHub JWT
+### Perform Pagination
+Leverage the `Invoke-PaginatedGitHubApiRoute` cmdlet to handle paginated API responses automatically:
+
 ```powershell
-New-GitHubJWT -AppId 12345 -PrivateKeyPath "./private-key.pem"
+# List all repositories in an organization
+Invoke-PaginatedGitHubApiRoute -Method GET -Route "/orgs/my-org/repos"
 ```
 
-### Handle Rate Limits
+### Perform a GraphQL Query
+Use the `Invoke-GitHubGraphql` cmdlet to execute GraphQL queries:
+
+```powershell
+# Example GraphQL query
+$query = @"
+{
+  repository(owner: \"my-org\", name: \"my-repo\") {
+    issues(last: 5) {
+      edges {
+        node {
+          title
+          url
+        }
+      }
+    }
+  }
+}
+"@
+Invoke-GitHubGraphql -Query $query
+```
+
+### Perform Pagination with GraphQL Queries
+For paginated GraphQL queries, use the `Invoke-GitHubGraphqlQuery` cmdlet:
+
+```powershell
+# Example paginated GraphQL query
+$query = @"
+{
+  repository(owner: \"my-org\", name: \"my-repo\") {
+    issues(first: 5, after: $cursor) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          title
+          url
+        }
+      }
+    }
+  }
+}
+"@
+Invoke-GitHubGraphqlQuery -Query $query
+```
+
+### Handling 202 Responses for Data Loading
+When an API endpoint returns a 202 status code due to data loading, use the `Invoke-GitHubApiRouteRetryOn202` cmdlet to handle retries automatically:
+
+```powershell
+Invoke-GitHubApiRouteRetryOn202 -Method GET -Route "/repos/my-org/my-repo/insights"
+```
+
+### Rate Limits and Throttling
+This module automatically handles rate limits and throttling. To explicitly check rate limits, use the `Assert-GitHubRateLimits` cmdlet:
+
 ```powershell
 Assert-GitHubRateLimits
 ```
 
-## Cmdlets
-Here is a list of available cmdlets:
+If you prefer using the GitHub CLI (`gh`), this module integrates seamlessly and provides rate limit protection out of the box.
 
-### General Utilities
-- `Add-IndexAndTotal`
-- `Convert-ToNormalPath`
-- `Get-CommentParameters`
-- `Get-MarkdownNoWrap`
-- `Get-RelativePathFromFolder`
-- `Get-RootFolder`
-- `New-MeasureMedian`
-- `New-TemporaryDirectory`
-
-### GitHub API
-- `Get-GitHubOrganizations`
-- `Get-GitHubRepositories`
-- `Get-RepoDetails`
-- `Invoke-GitHubApiRoute`
-- `Invoke-GitHubApiRouteNullOn404`
-- `Invoke-GitHubApiRouteRetryOn202`
-- `Invoke-GitHubApiRouteUsingAppJWT`
-- `Invoke-GitHubGraphql`
-- `Invoke-GitHubGraphqlQuery`
-- `Invoke-PaginatedGitHubApiRoute`
-- `Invoke-RateLimitedEndpoint`
-- `New-GitHubJWT`
-- `Update-GitHubToken`
-
-### Entra ID API
-- `Invoke-EntraIdApiRoute`
-- `Invoke-PaginatedEntraIdApiRoute`
-- `Update-EntraIdToken`
-
-### Markdown Utilities
-- `New-Markdown`
-- `Set-ReadmeSection`
-
-## Additional Requirements
-- **GitHub CLI (`gh`)**: This module requires the GitHub CLI to be installed and configured for certain operations. You can download it from [GitHub CLI](https://cli.github.com/).
 
 ## Contributing
 Contributions are welcome! Please follow these steps:

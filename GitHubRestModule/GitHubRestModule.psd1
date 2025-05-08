@@ -20,7 +20,7 @@
     # Private data
     PrivateData = @{
         PSData = @{
-            Tags        = @('GitHub', 'REST API', 'PowerShell')
+            Tags        = @('GitHub', 'RESTAPI', 'PowerShell')
             LicenseUri  = 'https://github.com/htekdev/github-api-ps-module/blob/master/LICENSE'
             ProjectUri  = 'https://github.com/htekdev/github-api-ps-module'
             ReleaseNotes = 'Initial release'
